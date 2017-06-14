@@ -1,29 +1,27 @@
 library(rpart)
 
 
-result = read.csv("/Users/yamamoto/work/tree/gs1000.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
-result <- result[6:9]
-View(result)
+d = read.csv("/Users/yamamoto/work/tree/test.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
+d <- d[6:9]
+View(d)
 #pairs(result, col=as.integer(result$category), pch=as.integer(result$category))
 
 
 set.seed(777)
-tmp <- sample(1:2000, 1800)
-x <- result[tmp,]
-y <- result[-tmp,]
+tmp <- sample(1:440000, 400000)
+x <- d[tmp,]
+y <- d[-tmp,]
 
-tree_cart <- rpart(category ~ ., data=x)
-plot.new(); par(xpd=T); plot(tree_cart)
-text(tree_cart, use.n = T, digits=getOption("digits"))
+tree_train <- rpart(category ~ ., data=x)
+plot.new(); par(xpd=T); plot(tree_train)
+text(tree_train, use.n = T, digits=getOption("digits"))
 
 
-tree_pred <- predict(tree_cart, y, type="class")
+tree_pred <- predict(tree_train, y, type="class")
 table(y$category, tree_pred)
 
 
-g <- rpart.plot(tree_cart)
-summary(g)
-plot(g)
+
 
 nrow(filter(result, category=="germline"))
 nrow(filter(result, category=="others"))
