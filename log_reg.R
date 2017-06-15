@@ -21,6 +21,20 @@ result_tbl <- table(y$category, test_predict)
 
 
 
+on.exit()
+
+
+
+#memo
+result2 <- result[, c(-1)]
+cor(result2)
+plot(result$dbSNP, result$category)
+plot(result$dbSNP, result$ExAc)
+plot(result$cosmic, result$ExAc)
+
+library(scatterplot3d)
+scatterplot3d(result$dbSNP, result$cosmic, result$ExAC)
+
 #2値分類なので、０〜１で出力、roundで丸めているだけ（四捨五入で近い方）
 train_model.p <- round(predict(train_model, type="response"))
 train_model.t <- table(x$category, train_model.p)
@@ -52,15 +66,6 @@ predict <- ifelse(log2$fit>0.5,1,0)
 log2 <- cbind(log2, predict)
 table(log2$category, log2$predict)
 
-age.group <- cut(juul.gir$age, c(8:18))
-m1.pr <- predict(m1, newage, type="response")
-tb <- table(age.group, juul.gir$menarche)
-rel.freq <- prop.table(tb,1)[,2]
-points(c(8:17)+0.5, rel.freq, pch=1)
-
-
-
-
 
 
 
@@ -71,34 +76,6 @@ index <- sample(nrow(iris_new), nrow(iris_new)*0.7)
 #回帰
 res <- glm(Species ~ ., iris_new[index,], family = binomial())
 summary(res)
-
-
-
-data(babyfood, package="faraway")
-mod1 <- glm(cbind(disease, nondisease)~sex+food, family=binomial,data=babyfood)
-summary(mod1)
-
-data(juul, package = "ISwR")
-set.seed(10)
-juul[sample(nrow(juul), 4), ]
-
-temp <- subset(juul, age>8, age < 18)
-juul.gir <- na.omit(temp[, 1:4])
-head(juul.gir, n=3)
-
-
-m1 <- glm(menarche ~ age, data=juul.gir, binomial)
-summary(m1)
-
-newage <- data.frame(age=seq(8,18,0.1))
-m1.pr <- predict(m1, newage, type="response")
-plot(newage$age, m1.pr, type="l")
-
-age.group <- cut(juul.gir$age, c(8:18))
-m1.pr <- predict(m1, newage, type="response")
-tb <- table(age.group, juul.gir$menarche)
-rel.freq <- prop.table(tb,1)[,2]
-points(c(8:17)+0.5, rel.freq, pch=1)
 
 
 
