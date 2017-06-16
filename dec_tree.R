@@ -1,18 +1,17 @@
 library(rpart)
 
 
-d = read.csv("/Users/yamamoto/work/tree/test.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
-d <- d[6:9]
+d = read.csv("/Users/yamamoto/work/tree/misc/gs1000.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
+#d <- d[6:9]
 View(d)
-#pairs(result, col=as.integer(result$category), pch=as.integer(result$category))
 
 
 set.seed(777)
-tmp <- sample(1:440000, 400000)
+tmp <- sample(1:2000, 1800)
 x <- d[tmp,]
 y <- d[-tmp,]
 
-tree_train <- rpart(category ~ ., data=x)
+tree_train <- rpart(category ~ dbSNP + cosmic + ExAC, data=x)
 plot.new(); par(xpd=T); plot(tree_train)
 text(tree_train, use.n = T, digits=getOption("digits"))
 
@@ -20,7 +19,8 @@ text(tree_train, use.n = T, digits=getOption("digits"))
 tree_pred <- predict(tree_train, y, type="class")
 table(y$category, tree_pred)
 
-
+result <- cbind(y, tree_pred)
+mismatch_result <- result %>% filter(result$category != result$tree_pred)
 
 
 nrow(filter(result, category=="germline"))

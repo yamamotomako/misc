@@ -1,15 +1,18 @@
-result = read.csv("/Users/yamamoto/work/tree/misc/gs1000.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
-result <- result[6:9]
+d = read.csv("/Users/yamamoto/work/tree/misc/gs1000.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
+data_header <- d[1:5]
+data_detail <- d[6:9]
 
-colnames(result) <- c("category_name", "dbSNP.old", "cosmic", "exac")
-result <- transform(result, category=ifelse(category_name=="germline",1,0))
-result <- transform(result, dbsnp=ifelse(dbSNP.old=="True",1,0))
-head(result, n=10)
+colnames(data_detail) <- c("category_name", "dbSNP.old", "cosmic", "exac")
+data_detail <- transform(data_detail, category=ifelse(category_name=="germline",1,0))
+data_detail <- transform(data_detail, dbsnp=ifelse(dbSNP.old==1,1,0))
+
+dd <- cbind(data_header, data_detail)
+View(dd)
 
 set.seed(777)
 tmp <- sample(1:2000, 1800)
-x <- result[tmp,]
-y <- result[-tmp,]
+x <- dd[tmp,]
+y <- dd[-tmp,]
 
 
 train_model = glm(category ~ dbsnp + cosmic + exac, data=x, family = binomial(link="logit"))
@@ -19,9 +22,55 @@ test_predict <- round(predict(train_model, y, type="response"))
 result_tbl <- table(y$category, test_predict)
 
 
+result <- cbind(y, test_predict)
+mismatch_result <- result %>% filter(result$category != result$test_predict)
+
+
 
 
 on.exit()
+
+
+
+#caret
+library(caret)
+library(mlbench)
+library(dplyr)
+library(dtplyr)
+
+data(Sonar)
+set.seed(107)
+dim(Sonar)
+str(Sonar)
+
+dat_for_ml <- Sonar
+inTrain <- createDataPartition(y = dat_for_ml$Class, p=0.7, list=FALSE)
+
+dat_for_train <- dat_for_ml[inTrain,]
+dat_for_test <- dat_for_ml[-inTrain,]
+
+dat_for_train$Class %>% table
+dat_for_test$Class %>% table
+
+dat_for_test_val <- dat_for_test %>% select(-Class)
+dat_for_test_class <- dat_for_test %>% select(Class) %>% unlist
+
+tr <- trainControl(method = "LGOCV", p=0.80)
+train_grid <- expand.grid(alpha = 0, lambda = 0)
+
+#train
+logit_fit <- train(as.factor(Class) ~ .,
+                   data = dat_for_train,
+                   method = "glmnet",
+                   tuneGrid = train_grid,
+                   trContorol = tr,
+                   preProc = c("center", "scale"))
+
+
+data(iris)
+train_control <- trainControl(method = "cv", number=10)
+grid <- expand.grid(alpha = 0, lambda = 0)
+model <- train(Species~., data=iris, trControl=train_control, method="glmnet", tuneGrid=grid)
 
 
 
