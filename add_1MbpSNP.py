@@ -40,10 +40,23 @@ for file in os.listdir(inpdir):
             depth_str = ""
             variant_str = ""
 
+            try:
+                url = "/home/ymako/calc_feature/filt_bgzip/" + samplename + ".filt.snp.gz"
+                tbx = pysam.TabixFile(url)
+            except:
+                url = "/home/ymako/calc_feature/filt_bgzip/" + samplename.replace("N","T") + ".filt.snp.gz"
+                tbx = pysam.TabixFile(url)
+                #print url
+                #print tbx
+                #print chrm, start, end, int(start)-int(span), int(end)+int(span)
 
-            tbx = pysam.TabixFile(url)
-            for r in tbx.fetch("chr"+chrm, int(start)-int(span), int(end)+int(span), parser=pysam.asTuple()):
+            
+            start_pos = max(0, int(start)-int(span))
+            end_pos = int(end) + int(span)
+
+            for r in tbx.fetch("chr"+chrm, start_pos, end_pos, parser=pysam.asTuple()):
             #for r in records:
+                #print r
                 misRate_t = r[5]
                 depth_t = r[6]
                 variant_t = r[7]
