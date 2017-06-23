@@ -1,17 +1,20 @@
 library(rpart)
 
 
-d = read.csv("/Users/yamamoto/work/tree/misc/gs1000.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
+d = read.csv("/Users/yamamoto/work/tree/result/gs1286_addsnp.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
 #d <- d[6:9]
 View(d)
 
+d$category <- ifelse(d$category == "A","somatic","germline")
 
 set.seed(777)
-tmp <- sample(1:2000, 1800)
+tmp <- sample(1:2562, 2100)
 x <- d[tmp,]
 y <- d[-tmp,]
 
-tree_train <- rpart(category ~ dbSNP + cosmic + ExAC, data=x)
+
+
+tree_train <- rpart(category ~ dbSNP + cosmic + ExAC + cohort_count + misRate + depth + variantNum, data=x)
 plot.new(); par(xpd=T); plot(tree_train)
 text(tree_train, use.n = T, digits=getOption("digits"))
 
