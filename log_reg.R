@@ -1,21 +1,22 @@
-d = read.csv("/Users/yamamoto/work/tree/misc/gs1000.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
+d = read.csv("/Users/yamamoto/work/tree/result/gs1286_addsnp.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
 data_header <- d[1:5]
-data_detail <- d[6:9]
+data_detail <- d[6:16]
 
-colnames(data_detail) <- c("category_name", "dbSNP.old", "cosmic", "exac")
-data_detail <- transform(data_detail, category=ifelse(category_name=="germline",1,0))
-data_detail <- transform(data_detail, dbsnp=ifelse(dbSNP.old==1,1,0))
+colnames(data_detail) <- c("category_name", "dbSNP.old", "cosmic", "exac", "misrate", "depth", "variantNum", "misRateOtherSNP", "depthOtherSNP","variantNumOtherSNP","cohort_count")
+data_detail <- transform(data_detail, category=ifelse(category_name=="A",1,0))
+data_detail <- transform(data_detail, dbsnp=ifelse(dbSNP.old=="True",1,0))
+data_detail <- transform(data_detail, othersnp=ifelse(misRateOtherSNP!="",1,0))
 
 dd <- cbind(data_header, data_detail)
 View(dd)
 
 set.seed(777)
-tmp <- sample(1:2000, 1800)
+tmp <- sample(1:2562, 2100)
 x <- dd[tmp,]
 y <- dd[-tmp,]
 
 
-train_model = glm(category ~ dbsnp + cosmic + exac, data=x, family = binomial(link="logit"))
+train_model = glm(category ~ dbsnp + cosmic + exac + cohort_count + misrate + depth + variantNum + othersnp, data=x, family = binomial(link="logit"))
 summary(train_model)
 
 test_predict <- round(predict(train_model, y, type="response"))
