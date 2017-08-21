@@ -1,16 +1,18 @@
-d = read.csv("/Users/yamamoto/work/beta_binomial/all_ab.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
+d = read.csv("/Users/yamamoto/work/beta_binomial/all_gs_beta.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
 
 #d <- dplyr::mutate(d, category_test=ifelse(grep("/A/",sample), "somatic", "germline"))
-
-d <- dplyr::filter(d, depth-variant >= 3)
-d <- dplyr::filter(d, variant/depth < 0.95)
+d$category <- ifelse(d$category == "A","somatic","germline")
+#d <- dplyr::filter(d, depth-variant >= 3)
+#d <- dplyr::filter(d, variant/depth < 0.95)
 
 d <- dplyr::mutate(d, log_pvalue=-log10(dbetabinom.ab(variant, depth, shape1 = alpha, shape2 = beta)))
+d$log_pvalue <- ifelse(d$other_misrate == "", 0, d$log_pvalue)
 
 p <- ggplot(d, aes(x=category, y=log_pvalue)) + geom_boxplot() + theme(axis.text.x = element_text(size=rel(2)), axis.text.y = element_text(size=rel(2)), axis.title.x = element_text(size=rel(2)), axis.title.y = element_text(size=rel(2)))
 p + ylim(c(0,20))
 
 plot(p)
+
 
 
 d <- dplyr::arrange(d, desc(log_pvalue))

@@ -1,22 +1,24 @@
-d = read.csv("/Users/yamamoto/work/tree/result/gs1286_addsnp.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
-data_header <- d[1:5]
-data_detail <- d[6:16]
+data = read.csv("/Users/yamamoto/work/beta_binomial/all_gs_beta_1285.txt", stringsAsFactors = TRUE, header = TRUE, sep="\t")
+#data_header <- d[1:5]
+#data_detail <- d[6:16]
 
-colnames(data_detail) <- c("category_name", "dbSNP.old", "cosmic", "exac", "misrate", "depth", "variantNum", "misRateOtherSNP", "depthOtherSNP","variantNumOtherSNP","cohort_count")
-data_detail <- transform(data_detail, category=ifelse(category_name=="A",1,0))
-data_detail <- transform(data_detail, dbsnp=ifelse(dbSNP.old=="True",1,0))
-data_detail <- transform(data_detail, othersnp=ifelse(misRateOtherSNP!="",1,0))
+#colnames(data_detail) <- c("category_name", "dbSNP.old", "cosmic", "exac", "misrate", "depth", "variantNum", "misRateOtherSNP", "depthOtherSNP","variantNumOtherSNP","cohort_count")
+data$category <- ifelse(data$category == "A",0,1)
+data$dbsnp <- ifelse(data$dbsnp == "True",1,0)
 
-dd <- cbind(data_header, data_detail)
-View(dd)
+data <- dplyr::mutate(data, log_pvalue=-log10(dbetabinom.ab(variant, depth, shape1 = alpha, shape2 = beta)))
+data$log_pvalue <- ifelse(data$other_misrate == "", 0, d$log_pvalue)
+
+View(data)
 
 set.seed(777)
-tmp <- sample(1:2562, 2100)
-x <- dd[tmp,]
-y <- dd[-tmp,]
+tmp <- sample(1:2572, 2100)
+x <- data[tmp,]
+y <- data[-tmp,]
 
 
-train_model = glm(category ~ dbsnp + cosmic + exac + cohort_count + misrate + depth + variantNum + othersnp, data=x, family = binomial(link="logit"))
+train_model = glm(category ~ dbsnp + cosmic + exac + cohort + misrate, data=x, family = binomial(link="logit"))
+#train_model = glm(category ~ dbsnp + cosmic + exac + cohort + misrate, data=x, family = binomial(link="logit"))
 summary(train_model)
 
 test_predict <- round(predict(train_model, y, type="response"))
